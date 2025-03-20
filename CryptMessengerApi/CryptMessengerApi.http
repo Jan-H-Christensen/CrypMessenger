@@ -1,0 +1,6 @@
+@CryptMessengerApi_HostAddress = http://localhost:5187
+
+GET {{CryptMessengerApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
