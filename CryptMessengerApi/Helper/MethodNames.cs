@@ -2,8 +2,7 @@ namespace CryptMessengerApi.Helper
 {
     public enum MethodNames
     {
-        SendEndcryptMessages,
-        SendPrivateMessage,
+        ReceivePrivateMessage,
         GetUserName,
         GetNickName,
         ReceiveMessage,

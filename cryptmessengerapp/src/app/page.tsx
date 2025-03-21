@@ -7,16 +7,20 @@ import {
   HubConnection,
 } from "@microsoft/signalr";
 import Login from "../../components/login";
+// Import RSA-OAEP helper functions
 import {
-  generateKey,
-  encryptMessage,
-  decryptMessage,
+  generateKeyPair,
+  encryptWithPublicKey,
+  decryptWithPrivateKey,
+  arrayBufferToBase64,
+  base64ToArrayBuffer,
+  importPublicKey,
 } from "../../utils/Cryption";
 import { Message } from "../../models/Message";
 import { UserConnection } from "../../models/UserConnection";
-import { EncryptMessage } from "../../models/EncryptMessage";
 
 export default function Home() {
+  // State declarations
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [privateInput, setPrivateInput] = useState("");
@@ -27,181 +31,158 @@ export default function Home() {
     null
   );
   const [users, setUsers] = useState<UserConnection[]>([]);
-  const [encryptionKey, setEncryptionKey] = useState<CryptoKey | null>(null);
+  // RSA keys: hold the private key here and the exported public key as Base64
+  const [privateKey, setPrivateKey] = useState<CryptoKey | null>(null);
+  const [publicKeyBase64, setPublicKeyBase64] = useState<string>("");
 
-  useEffect(() => {
-    generateKey().then(setEncryptionKey);
-  }, []);
+  // On login, generate key pair and send public key to server
+  const handleLogin = async (username: string) => {
+    setUsername(username);
+    const { publicKey, privateKey } = await generateKeyPair();
+    setPrivateKey(privateKey);
+    // Export public key as Base64 (using spki)
+    const exported = await crypto.subtle.exportKey("spki", publicKey);
+    const publicKeyStr = arrayBufferToBase64(exported);
+    setPublicKeyBase64(publicKeyStr);
 
-  useEffect(() => {
-    if (connection) {
-      connection
-        .start()
-        .then(() => {
-          console.log("Connected!");
+    // Create connection
+    const newConnection = new HubConnectionBuilder()
+      .withUrl("http://localhost:5187/chat")
+      .configureLogging(LogLevel.Information)
+      .build();
+    setConnection(newConnection);
 
-          connection.on("ReceiveMessage", async (user, message) => {
-            setMessages((messages) => [
-              ...messages,
-              { user: user.username, text: message },
-            ]);
-          });
+    // Create user object that includes the public key
+    const userConn: UserConnection = {
+      connectionId: "", // will be set by the server
+      username: username,
+      publicKey: publicKeyStr,
+    };
+    setUserConnection(userConn);
 
-          connection.on("SendPrivateMessage", async (EncryptMessage) => {
-            if (encryptionKey) {
-              const decryptedMessage = await decryptMessage(
-                encryptionKey,
-                EncryptMessage.IV,
-                EncryptMessage.Message
-              );
-              setMessages((messages) => [
-                ...messages,
-                { user: EncryptMessage.username, text: decryptedMessage },
-              ]);
-            }
-          });
+    newConnection.on("ReceiveMessage", (user, message) => {
+      setMessages((msgs) => [...msgs, { user: user.username, text: message }]);
+    });
 
-          connection.on("UserJoined", (user) => {
-            console.log("User joined:", user);
-            setUsers((users) => {
-              const updatedUsers = [...users, user];
-              const uniqueUsers = Array.from(
-                new Set(updatedUsers.map((u) => u.connectionId))
-              ).map((id) => updatedUsers.find((u) => u.connectionId === id));
-              return uniqueUsers;
-            });
-          });
+    // When receiving a private message, decrypt it using our private key
+    newConnection.on("ReceivePrivateMessage", async (user, message) => {
+      try {
+        if (privateKey) {
+          // The message here is sent as a Base64 string (format depends on your encryption method)
+          console.log("Received message:", message);
+          const parts = message.split(":");
+          console.log("IV part:", parts[0], "Encrypted part:", parts[1]);
 
-          connection.on("UserLeft", (user) => {
-            console.log("User left:", user);
-            setUsers((users) =>
-              users.filter((u) => u.connectionId !== user.connectionId)
+          if (parts.length === 2) {
+            const ivBase64 = parts[0];
+            const encryptedBase64 = parts[1];
+            const encryptedBuffer = base64ToArrayBuffer(encryptedBase64);
+            const decryptedMessage = await decryptWithPrivateKey(
+              privateKey,
+              encryptedBuffer
             );
-          });
+            setMessages((msgs) => [
+              ...msgs,
+              { user: user.username, text: decryptedMessage },
+            ]);
+          } else {
+            console.error("Invalid message format");
+          }
+        } else {
+          console.error("Private key not available");
+        }
+      } catch (error) {
+        console.error("Error decrypting message:", error);
+      }
+    });
 
-          connection.on("UserList", (userList) => {
-            console.log("User list:", userList);
-            setUsers(userList);
-          });
-        })
-        .catch((e) => console.log("Connection failed: ", e));
+    // When receiving the user list, expect each user to include their public key
+    newConnection.on("UserList", (userList) => {
+      setUsers(userList);
+    });
+
+    newConnection.on("UserJoined", (user) => {
+      console.log("User joined:", user);
+      setUsers((currentUsers) => {
+        const updatedUsers = [...currentUsers, user];
+        // Ensure uniqueness by connectionId
+        return Array.from(new Set(updatedUsers.map((u) => u.connectionId))).map(
+          (id) => updatedUsers.find((u) => u.connectionId === id)!
+        );
+      });
+    });
+
+    newConnection.on("UserLeft", (user) => {
+      console.log("User left:", user);
+      setUsers((currentUsers) =>
+        currentUsers.filter((u) => u.connectionId !== user.connectionId)
+      );
+    });
+
+    try {
+      await newConnection.start();
+      // Send JoinChat; the server will store our public key along with our user info
+      await newConnection.invoke("JoinChat", userConn);
+    } catch (error) {
+      console.error("Error during login:", error);
     }
-  }, [connection, encryptionKey]);
+  };
 
+  // Send a regular (unencrypted) message
   const handleSendMessage = async () => {
     if (input.trim() && connection && userConnection) {
       try {
         await connection.invoke("SendMessage", userConnection, input);
         setInput("");
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
       }
     }
   };
 
+  // Send a private message using the recipient's public key
   const handleSendPrivateMessage = async () => {
     if (
       privateInput.trim() &&
       privateRecipient.trim() &&
       connection &&
-      userConnection &&
-      encryptionKey
+      userConnection
     ) {
       try {
-        // Encrypt message
-        const { iv, encrypted } = await encryptMessage(
-          encryptionKey,
-          privateInput
-        );
+        // Find recipient in the user list (should include their public key)
+        const recipient = users.find((u) => u.username === privateRecipient);
+        if (recipient && recipient.publicKey) {
+          // Import the recipient's public key
+          const importedPublicKey = await importPublicKey(recipient.publicKey);
+          // Encrypt the private message with the recipient's public key
+          const iv = crypto.getRandomValues(new Uint8Array(12)); // Generate a random IV
+          const encryptedBuffer = await encryptWithPublicKey(
+            importedPublicKey,
+            privateInput
+          );
+          const encryptedBase64 = arrayBufferToBase64(encryptedBuffer);
+          const ivBase64 = arrayBufferToBase64(iv.buffer);
 
-        const recipient = users.find(
-          (user) => user.username === privateRecipient
-        );
-        if (recipient) {
-          const crypt: EncryptMessage = {
-            ConnectionId: recipient.connectionId,
-            UserName: privateRecipient,
-            IV: iv,
-            Message: encrypted,
-          };
+          // Format the message as iv:encryptedMessage
+          const formattedMessage = `${ivBase64}:${encryptedBase64}`;
 
-          console.log("Sending private message:", crypt);
-          await connection.invoke("SendPrivateMessage", crypt);
+          console.log("Sending private message (encrypted):", formattedMessage);
+          await connection.invoke(
+            "SendPrivateMessage",
+            userConnection,
+            privateRecipient,
+            formattedMessage
+          );
 
           setPrivateInput("");
           setPrivateRecipient("");
         } else {
-          console.error("Recipient not found");
+          console.error("Recipient not found or missing public key");
         }
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error("Error sending private message:", error);
       }
     }
-  };
-
-  const handleLogin = async (username: string) => {
-    setUsername(username);
-
-    const newConnection = new HubConnectionBuilder()
-      .withUrl("http://localhost:5187/chat")
-      .configureLogging(LogLevel.Information)
-      .build();
-
-    setConnection(newConnection);
-
-    const userConnection: UserConnection = {
-      connectionId: "", // This will be set by the server
-      username: username,
-    };
-
-    setUserConnection(userConnection);
-
-    newConnection.on("ReceiveMessage", async (user, message) => {
-      setMessages((messages) => [
-        ...messages,
-        { user: user.username, text: message },
-      ]);
-    });
-
-    newConnection.on("SendPrivateMessage", async (EncryptMessage) => {
-      if (encryptionKey) {
-        const decryptedMessage = await decryptMessage(
-          encryptionKey,
-          EncryptMessage.IV,
-          EncryptMessage.Message
-        );
-        setMessages((messages) => [
-          ...messages,
-          { user: EncryptMessage.username, text: decryptedMessage },
-        ]);
-      }
-    });
-
-    newConnection.on("UserJoined", async (user) => {
-      console.log("User joined:", user);
-      setUsers((users) => {
-        const updatedUsers = [...users, user];
-        const uniqueUsers = Array.from(
-          new Set(updatedUsers.map((u) => u.connectionId))
-        ).map((id) => updatedUsers.find((u) => u.connectionId === id));
-        return uniqueUsers;
-      });
-    });
-
-    newConnection.on("UserLeft", async (user) => {
-      console.log("User left:", user);
-      setUsers((users) =>
-        users.filter((u) => u.connectionId !== user.connectionId)
-      );
-    });
-
-    newConnection.on("UserList", async (userList) => {
-      console.log("User list:", userList);
-      setUsers(userList);
-    });
-
-    await newConnection.start();
-    await newConnection.invoke("JoinChat", userConnection);
   };
 
   if (!username) {
@@ -225,7 +206,7 @@ export default function Home() {
         </ul>
       </div>
       <div className="flex-1 flex flex-col items-center justify-between p-24">
-        <h1 className="text-2xl font-bold mb-4">Chat App</h1>
+        <h1 className="text-2xl font-bold mb-4">Chat App user: {username}</h1>
         <div className="flex flex-col w-full max-w-md border rounded-lg p-4">
           <div className="flex-1 overflow-y-auto mb-4">
             {messages.map((msg, index) => (
