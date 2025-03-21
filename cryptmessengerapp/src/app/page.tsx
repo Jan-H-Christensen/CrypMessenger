@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState } from "react";
@@ -32,6 +33,7 @@ export default function Home() {
   );
   const [users, setUsers] = useState<UserConnection[]>([]);
   // RSA keys: hold the private key here and the exported public key as Base64
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [privateKey, setPrivateKey] = useState<CryptoKey | null>(null);
   const [publicKeyBase64, setPublicKeyBase64] = useState<string>("");
 
