@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   HubConnectionBuilder,
   LogLevel,
@@ -74,7 +74,6 @@ export default function Home() {
           console.log("IV part:", parts[0], "Encrypted part:", parts[1]);
 
           if (parts.length === 2) {
-            const ivBase64 = parts[0];
             const encryptedBase64 = parts[1];
             const encryptedBuffer = base64ToArrayBuffer(encryptedBase64);
             const decryptedMessage = await decryptWithPrivateKey(
