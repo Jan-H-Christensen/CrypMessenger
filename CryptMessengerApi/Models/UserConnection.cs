@@ -4,6 +4,5 @@ namespace CryptMessengerApi.Models
     {
         public string ConnectionId { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
-        public string Chatroom { get; set; } = string.Empty;
     }
 }
