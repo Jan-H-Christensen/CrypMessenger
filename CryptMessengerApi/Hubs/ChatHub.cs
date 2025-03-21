@@ -20,7 +20,7 @@ namespace CryptMessengerApi.Hubs
             // Send the list of users (with their public keys) to the newly joined client
             await Clients.Caller.SendAsync(nameof(MethodNames.UserList), ClientSource.Clients);
             // Notify all clients about the new user
-            await Clients.All.SendAsync(nameof(MethodNames.UserJoined), user);
+            await Clients.All.SendAsync(nameof(MethodNames.UserJoined), user, $"{user.Username} joined the chat.");
         }
 
         public async Task SendMessage(UserConnection user, string message)
@@ -39,7 +39,6 @@ namespace CryptMessengerApi.Hubs
 
         public async Task SendPrivateMessage(UserConnection user, string recipientUsername, string message)
         {
-            // Expecting message already encrypted with the format iv:encryptedData
             var parts = message.Split(':');
             if (parts.Length == 2)
             {
@@ -67,7 +66,7 @@ namespace CryptMessengerApi.Hubs
             }
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var user = ClientSource.Clients.FirstOrDefault(u => u.ConnectionId == Context.ConnectionId);
             if (user != null)
