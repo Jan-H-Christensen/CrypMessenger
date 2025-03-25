@@ -35,6 +35,7 @@ dotnet run
 ```
 Run the following commands on cryptmessengerapp Terminal:
 ```bash
+cd cryptmessengerapp 
 npm run dev
 ```
 
