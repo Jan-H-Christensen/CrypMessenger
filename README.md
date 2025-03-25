@@ -95,7 +95,8 @@ RSA-OAEP is good for encrypting small pieces of data, such as symmetric encrypti
 When encrypting a message, the plain text is padded using OAEP (Optimal Asymmetric Encryption Padding) scheme.
 The padded message is then encrypted using RSA with the recipient's public key, finally the encrypted ciphertext is sent to the recipient.
 The padding of OAEP is there to prevent attacks like chosen-ciphertext attacks by introducing randomness in the encryption process by using a masking function with a hash function(SHA-256).
-Chosen-ciphertext attacks is where the Attacker can gather information by obtaining the decryptions of chosen ciphertexts, from these pieces of information the Attacker can attempt to recover the secret key used for decryption
+Chosen-ciphertext attacks is where the Attacker can gather information by obtaining the decryptions of chosen ciphertexts, from these pieces of information the Attacker can attempt to recover the secret key used for decryption.
+
 The main reason for using this padding is so that encrypting the same message multiple times produces different ciphertexts, making it much harder for the Attacker to obtain the data needed to recover the secret key.
 
 # Final Words
