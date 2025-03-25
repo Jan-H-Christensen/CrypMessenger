@@ -22,23 +22,40 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Troubleshooting
+# In the case of error regarding React:
+```bash
+npm install next@latest react@latest react-dom@latest
+```
+```bash
+npm i --save-dev @types/react
+```
 # In the case of the program not running:
-Delete the bin in CryptMessengerApi and make sure that your LocalMachine is set to Unrestricted for:
+Delete the bin in CryptMessengerApi and make sure that your LocalMachine is set to Unrestricted, otherwise deletion may be blocked.
 ```bash
 Get-ExecutionPolicy -List
+```
+```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 ```
 
 Run the following commands on CryptMessengerApi Terminal:
 ```bash
 cd cryptmessengerApi
-dotnet restore 
-dotnet build  
+```
+```bash
+dotnet restore
+```
+```bash
+dotnet build
+```
+```bash
 dotnet run  
 ```
 Run the following commands on cryptmessengerapp Terminal:
 ```bash
-cd cryptmessengerapp 
+cd cryptmessengerapp
+```
+```bash
 npm run dev
 ```
 
