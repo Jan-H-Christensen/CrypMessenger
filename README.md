@@ -1,9 +1,9 @@
-## Intro
+# Intro
 This is an Application and API for Secure Software Development.
 
 It contains a chat where you can pick a username and login on as many tabs you desire.
 
-## Getting Started
+# Getting Started
 
 First, Copy the Repository and open the split terminal.
 
@@ -21,15 +21,15 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Troubleshooting
-# In the case of error regarding React:
+# Troubleshooting
+## In the case of error regarding React:
 ```bash
 npm install next@latest react@latest react-dom@latest
 ```
 ```bash
 npm i --save-dev @types/react
 ```
-# In the case of the program not running:
+## In the case of the program not running:
 Delete the bin in CryptMessengerApi and make sure that your LocalMachine is set to Unrestricted, otherwise deletion may be blocked.
 ```bash
 Get-ExecutionPolicy -List
@@ -59,27 +59,27 @@ cd cryptmessengerapp
 npm run dev
 ```
 
-## Interaction
+# Interaction
 
 Once you have entered 2 or more users, you can click on any user on the list to automatically add them to the private messaging recipient.
 
 The message you write in the box for private messages will only be sent to the recipient you have selected.
 
-## The Visuals
+# The Visuals
 
-# Entering the username:
+## Entering the username:
 - ![Entering the username:](https://i.gyazo.com/fb3a05ea95903c6b05cc0c38d78a5bea.png)
-# Your active users:
+## Your active users:
 - ![Your active users: ](https://i.gyazo.com/8a517c831169dace6da6cde57968d66e.png)
-# The Chat with private messaging:
+## The Chat with private messaging:
 - ![The Chat with private messaging: ](https://i.gyazo.com/0f47c58f21ff0cd903e31c16674c1a23.png)
-# The same Chat from the perspective of Jan:
+## The same Chat from the perspective of Jan:
 - ![The same Chat from the perspective of Jan: ](https://i.gyazo.com/28fc046196d2cac69939353108392948.png)
-# The view from Console, showing the encryption:
+## The view from Console, showing the encryption:
 - ![The view from Console, showing the encryption: ](https://i.gyazo.com/763f390be6b8dd97f4807d5f96d36eac.png)
 
-## How the Encryption works
-# Client vs Server
+# How the Encryption works
+## Client vs Server
 In this project we are using End-to-End Encryption, meaning that everything happens Client-side, to ensure that the Server is only a messenger and does not have access to the decryptions between the users, allowing no eavesdropping, especially should the Server be compromised by an Attacker. The Attacker will not gain access to the decryption, only the encryption.
 
 Of course End-to-End Encryption does not guarantee absolute security, an Attacker can still gain access if they gain access to the users client where the data can be held unencrypted or if the Attacker gains access to the users account. In the case of vulnerability in the server, the messages are encrypted and secure from weakness in the server side, should the worst happen.
@@ -98,10 +98,10 @@ The padding of OAEP is there to prevent attacks like chosen-ciphertext attacks b
 Chosen-ciphertext attacks is where the Attacker can gather information by obtaining the decryptions of chosen ciphertexts, from these pieces of information the Attacker can attempt to recover the secret key used for decryption
 The main reason for using this padding is so that encrypting the same message multiple times produces different ciphertexts, making it much harder for the Attacker to obtain the data needed to recover the secret key.
 
-## Final Words
+# Final Words
 
 
-## Sources
+# Sources
 [Source for OAEP: ](https://en.wikipedia.org/wiki/Optimal_asymmetric_encryption_padding)
 
 [Source for RSA: ](https://en.wikipedia.org/wiki/RSA_cryptosystem)
