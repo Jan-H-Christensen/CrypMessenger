@@ -7,6 +7,9 @@ It contains a chat where you can pick a username and login on as many tabs you d
 
 First, Copy the Repository and open the split terminal.
 
+Second, make sure Node.js is installed, can be found here:
+[Link to installing Node.js: ](https://nodejs.org/en/download)
+
 Run the following commands on CryptMessengerApi Terminal:
 ```bash
 dotnet run  
