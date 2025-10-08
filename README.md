@@ -65,19 +65,6 @@ Once you have entered 2 or more users, you can click on any user on the list to 
 
 The message you write in the box for private messages will only be sent to the recipient you have selected.
 
-# The Visuals
-
-## Entering the username:
-- ![Entering the username:](https://i.gyazo.com/fb3a05ea95903c6b05cc0c38d78a5bea.png)
-## Your active users:
-- ![Your active users: ](https://i.gyazo.com/8a517c831169dace6da6cde57968d66e.png)
-## The Chat with private messaging:
-- ![The Chat with private messaging: ](https://i.gyazo.com/0f47c58f21ff0cd903e31c16674c1a23.png)
-## The same Chat from the perspective of Jan:
-- ![The same Chat from the perspective of Jan: ](https://i.gyazo.com/28fc046196d2cac69939353108392948.png)
-## The view from Console, showing the encryption:
-- ![The view from Console, showing the encryption: ](https://i.gyazo.com/763f390be6b8dd97f4807d5f96d36eac.png)
-
 # How the Encryption works
 ## Client vs Server
 In this project we are using End-to-End Encryption, meaning that everything happens Client-side, to ensure that the Server is only a messenger and does not have access to the decryptions between the users, allowing no eavesdropping, especially should the Server be compromised by an Attacker. The Attacker will not gain access to the decryption, only the encryption.
